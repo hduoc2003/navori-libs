@@ -117,7 +117,7 @@ module lib_addr::memory {
     public fun mstore(memory: &mut Memory, offset: u256, value: u256) {
         // TODO: allow offset doesn't need to be 0x20 muliplie
         let slice = to_big_endian(to_bytes(&value));
-        let (slot_index, slot_amount, first_slot_offset, last_slot_offset) = calculate_slot(offset, 32);
+        let (slot_index, _slot_amount, _first_slot_offset, _last_slot_offset) = calculate_slot(offset, 32);
         simple_map::upsert(&mut memory.slots, slot_index, MemorySlot {
             value: slice
         });

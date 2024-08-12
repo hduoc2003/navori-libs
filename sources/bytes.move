@@ -1,7 +1,10 @@
 module lib_addr::bytes {
     use std::bcs::to_bytes;
+    use std::option;
+    use std::option::Option;
+    use std::signer::address_of;
     use std::vector;
-    use std::vector::{append, for_each_ref};
+    use std::vector::{append, for_each_ref, length, borrow};
     use aptos_std::from_bcs::to_u256;
 
     // Pads a vector<u8> with a specified byte value up to the desired length
@@ -48,6 +51,47 @@ module lib_addr::bytes {
         return result
     }
 
+    public fun long_vec_to_bytes_be<Element>(signer: &signer, v: &vector<Element>): Option<vector<u8>> acquires Checkpoint, Cache {
+        let signer_addr = address_of(signer);
+        if (!exists<Checkpoint>(signer_addr)) {
+            move_to(signer, Checkpoint {
+                inner: IN_ITERATION
+            })
+        };
+        let Checkpoint {
+            inner: checkpoint
+        } = borrow_global_mut<Checkpoint>(signer_addr);
+        if (!exists<Cache>(signer_addr)) {
+            move_to(signer, Cache {
+                ptr: 0,
+                bytes: vector[]
+            })
+        };
+        let Cache {
+            ptr,
+            bytes
+        } = borrow_global_mut<Cache>(signer_addr);
+        if (*checkpoint == IN_ITERATION) {
+            let n = length(v);
+            let count = 0;
+            while (*ptr < n && count < ITERATION_LENGTH) {
+                let tmp = to_bytes(borrow(v, *ptr));
+                vector::reverse(&mut tmp);
+                append(bytes, tmp);
+                *ptr = *ptr + 1;
+                count = count + 1;
+            };
+            if (*ptr < n) {
+                return option::none<vector<u8>>()
+            };
+            *checkpoint = END_ITERATION;
+        };
+        let bytes = *bytes;
+        move_from<Checkpoint>(signer_addr);
+        move_from<Cache>(signer_addr);
+        option::some(bytes)
+    }
+
     public fun vec_to_bytes_be<Element>(v: &vector<Element>): vector<u8> {
         let bytes: vector<u8> = vector[];
         for_each_ref(v, |e| {
@@ -64,6 +108,23 @@ module lib_addr::bytes {
 
     public fun u256_from_bytes_be(bytes: &vector<u8>): u256 {
         to_u256(reverse(*bytes))
+    }
+
+    // Data of the function `long_vec_to_bytes_be`
+
+    // checkpoints
+    const IN_ITERATION: u8 = 1;
+    const END_ITERATION: u8 = 1;
+
+    const ITERATION_LENGTH: u64 = 1000;
+
+    struct Cache has key, drop {
+        ptr: u64,
+        bytes: vector<u8>
+    }
+
+    struct Checkpoint has key, drop {
+        inner: u8
     }
 }
 
