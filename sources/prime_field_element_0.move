@@ -1,7 +1,8 @@
 module lib_addr::prime_field_element_0 {
+    use std::option::Option;
     use aptos_std::from_bcs;
 
-    use lib_addr::math_mod::{mod_add, mod_exp, mod_mul, mod_sub};
+    use lib_addr::math_mod::{mod_add, mod_exp, mod_mul, mod_sub, large_mod_exp};
 
     // This line is used for generating constants DO NOT REMOVE!
     // 0x800000000000011000000000000000000000000000000000000000000000001
@@ -40,7 +41,7 @@ module lib_addr::prime_field_element_0 {
         mod_exp(val, exp, K_MODULUS)
     }
 
-    public fun inverse(val: u256): u256 {
-        mod_exp(val, K_MODULUS - 2, K_MODULUS)
+    public fun inverse(signer: &signer, val: u256): Option<u256> {
+        large_mod_exp(signer, val, K_MODULUS - 2, K_MODULUS)
     }
 }
