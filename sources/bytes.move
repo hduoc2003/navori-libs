@@ -103,11 +103,15 @@ module lib_addr::bytes {
     }
 
     public fun num_to_bytes_be<Element>(v: &Element): vector<u8> {
-        reverse(to_bytes(v))
+        let res = to_bytes(v);
+        vector::reverse(&mut res);
+        res
     }
 
     public fun u256_from_bytes_be(bytes: &vector<u8>): u256 {
-        to_u256(reverse(*bytes))
+        let r_bytes = *bytes;
+        vector::reverse(&mut r_bytes);
+        to_u256(r_bytes)
     }
 
     // Data of the function `long_vec_to_bytes_be`
