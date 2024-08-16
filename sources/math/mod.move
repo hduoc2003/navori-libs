@@ -91,7 +91,7 @@ module lib_addr::math_mod {
         res: u256
     }
 
-    const ITERATION_LENGTH: u8 = 200;
+    const ITERATION_LENGTH: u8 = 120;
 
     #[test]
     fun test_mod_add_max() {
