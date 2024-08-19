@@ -21,12 +21,13 @@ module lib_addr::math_mod {
         a = a % k;
         b = b % k;
         while (b > 0) {
-            if ((b & 1) == 1) {
-                res = (res + a) % k;
+            let aa = b & 15;
+            if (aa != 0) {
+                res = (res + a * aa) % k;
             };
 
-            a = (a << 1) % k;
-            b = b >> 1;
+            a = (a << 4) % k;
+            b = b >> 4;
         };
         res
     }
@@ -47,41 +48,6 @@ module lib_addr::math_mod {
             b = mod_mul(b, b, k);
         };
         res
-    }
-
-    public fun large_mod_exp(signer: &signer, b: u256, e: u256, k: u256): Option<u256> acquires Cache {
-        let signer_addr = address_of(signer);
-        if (!exists<Cache>(signer_addr)) {
-            move_to(signer, Cache {
-                e,
-                b,
-                res: 1
-            });
-        };
-        let Cache {
-            e,
-            b,
-            res
-        } = borrow_global_mut<Cache>(signer_addr);
-
-        let cnt = 0;
-        *b = *b % k;
-
-        while (*e > 0 && cnt < ITERATION_LENGTH) {
-            if ((*e & 1) == 1) {
-                *res = mod_mul(*res, *b, k);
-            };
-            *e = *e >> 1;
-            *b = mod_mul(*b, *b, k);
-            cnt = cnt + 1;
-        };
-        if (*e == 0) {
-            let res = *res;
-            move_from<Cache>(signer_addr);
-            option::some(res)
-        } else {
-            option::none<u256>()
-        }
     }
 
     // Data of the function `large_mod_exp`
@@ -145,14 +111,5 @@ module lib_addr::math_mod {
     fun test_mod_div() {
         assert!(mod_div(21, 3, 5) == 2, 1);
         assert!(mod_div(24, 4, 5) == 1, 1);
-    }
-
-    #[test(signer = @lib_addr)]
-    fun test_large_exp(signer: &signer) acquires Cache {
-        let k = 0x800000000000011000000000000000000000000000000000000000000000001;
-        let res = large_mod_exp(signer, 2, k - 2, k);
-        assert!(option::is_none(&res), 1);
-        res = large_mod_exp(signer, 2, k - 2, k);
-        assert!(*option::borrow(&res) == mod_exp(2, k - 2, k), 1);
     }
 }
