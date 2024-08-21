@@ -1,10 +1,11 @@
+
 [package]
 name = "libs"
 version = "1.0.0"
 authors = []
 
 [addresses]
-lib_addr = "0x03bcb547e66352f5f0a71e2b955c8f830dc640f3380c847e4e7103a8e2b53a81"
+lib_addr = "71d959497dac92fb60c77d3d6a39ccfeccf105d2a1259c374ba2ef51cd9f0cd5"
 
 [dependencies.AptosFramework]
 git = "https://github.com/aptos-labs/aptos-core.git"
